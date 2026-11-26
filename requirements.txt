@@ -1,0 +1,4 @@
+aiohttp>=3.9
+qrcode>=7.4
+zeroconf>=0.130
+evdev>=1.6; sys_platform == "linux"

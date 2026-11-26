@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>PhoneKB</title>
+<style>
+:root{--bg:#111318;--key:#2a2e38;--mod:#1d2028;--on:#4f8cff;--lat:#d9822b;--tx:#e8eaf0;color-scheme:dark}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font:600 clamp(11px,3.4vh,17px) system-ui,sans-serif;overflow:hidden;overscroll-behavior:none;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+#app{height:100%;display:flex;flex-direction:column;padding:max(2px,env(safe-area-inset-top)) max(4px,env(safe-area-inset-right)) max(2px,env(safe-area-inset-bottom)) max(4px,env(safe-area-inset-left))}
+#bar{flex:none;display:flex;align-items:center;gap:8px;font-size:12px;opacity:.85;padding:2px 4px}
+#dot{width:9px;height:9px;border-radius:50%;background:#c33}
+#dot.ok{background:#3c6}
+#fs{margin-left:auto;background:var(--key);color:var(--tx);border:0;border-radius:6px;padding:3px 10px;font:inherit;font-size:12px}
+#kb{flex:1;display:flex;flex-direction:column;min-height:0}
+.r{flex:1;display:grid;grid-template-columns:repeat(368,1fr);min-height:0}
+.r.f{flex:.7}
+.k{padding:2px;min-width:0}
+.k i{display:flex;align-items:center;justify-content:center;height:100%;background:var(--key);border-radius:6px;font-style:normal}
+.k.m i{background:var(--mod)}
+.k.sp i{background:none}
+.k.on i{background:var(--on)}
+.k.lat i{background:var(--lat)}
+#turn{display:none;position:fixed;inset:0;z-index:9;background:var(--bg);align-items:center;justify-content:center;text-align:center;font-size:18px;padding:24px}
+@media (orientation:portrait){#turn{display:flex}}
+</style></head><body>
+<div id="app">
+  <div id="bar"><span id="dot"></span><span id="st">Đang kết nối…</span><button id="fs">Toàn màn hình</button></div>
+  <div id="kb"></div>
+</div>
+<div id="turn">Xoay ngang điện thoại để dùng bàn phím</div>
+<script>
+const P={'`':'Backquote','-':'Minus','=':'Equal','[':'BracketLeft',']':'BracketRight',';':'Semicolon',"'":'Quote',',':'Comma','.':'Period','/':'Slash'};
+const c=ch=>/[A-Z]/.test(ch)?'Key'+ch:/\d/.test(ch)?'Digit'+ch:P[ch];
+const ks=s=>[...s].map(ch=>[ch,c(ch)]);
+const sp=w=>['',null,w],g=sp(.4);
+const F=[['Esc','Escape'],...Array.from({length:12},(_,i)=>['F'+(i+1),'F'+(i+1)])];
+// [nhãn, code, độ rộng (mặc định 1)]; mỗi hàng: 15 đơn vị phím chính + 0.4 + 3 cụm phải
+const R=[
+ [...F,sp(2),g,['Ins','Insert'],['Home','Home'],['PgUp','PageUp']],
+ [...ks('`1234567890-='),['⌫','Backspace',2],g,['Del','Delete'],['End','End'],['PgDn','PageDown']],
+ [['Tab','Tab',1.5],...ks('QWERTYUIOP[]'),['\\','Backslash',1.5],g,sp(3)],
+ [['Caps','CapsLock',1.75],...ks("ASDFGHJKL;'"),['Enter','Enter',2.25],g,sp(3)],
+ [['Shift','ShiftLeft',2.25],...ks('ZXCVBNM,./'),['Shift','ShiftRight',2.75],g,sp(1),['↑','ArrowUp'],sp(1)],
+ [['Ctrl','ControlLeft',1.25],['Win','MetaLeft',1.25],['Alt','AltLeft',1.25],['','Space',7.5],['Alt','AltRight',1.25],['Menu','ContextMenu',1.25],['Ctrl','ControlRight',1.25],g,['←','ArrowLeft'],['↓','ArrowDown'],['→','ArrowRight']]
+];
+const MODS=new Set(['ShiftLeft','ShiftRight','ControlLeft','ControlRight','AltLeft','AltRight','MetaLeft']);
+const kb=document.getElementById('kb'),els={};
+R.forEach((row,i)=>{
+  const d=document.createElement('div');d.className='r'+(i?'':' f');
+  row.forEach(([l,code,w])=>{
+    const e=document.createElement('div');
+    e.className='k'+(code?'':' sp')+(MODS.has(code)?' m':'');
+    e.style.gridColumn='span '+Math.round((w||1)*20);
+    e.innerHTML='<i></i>';e.firstChild.textContent=l;
+    if(code){e.dataset.c=code;els[code]=e}
+    d.append(e);
+  });
+  kb.append(d);
+});
+
+let T='';
+try{T=new URLSearchParams(location.search).get('t')||localStorage.getItem('pkb')||'';localStorage.setItem('pkb',T)}catch(e){}
+const dot=document.getElementById('dot'),st=document.getElementById('st');
+let ws;
+function send(t,k){if(ws&&ws.readyState===1)ws.send(JSON.stringify({t,k}))}
+function conn(){
+  ws=new WebSocket('ws://'+location.host+'/ws?t='+encodeURIComponent(T));
+  ws.onopen=()=>{dot.className='ok';st.textContent='Đã kết nối'};
+  ws.onclose=()=>{dot.className='';st.textContent='Mất kết nối, đang thử lại…';reset();setTimeout(conn,1000)};
+}
+conn();
+
+const down=new Map(),latched=new Set();
+function reset(){down.clear();latched.clear();Object.values(els).forEach(e=>e.classList.remove('on','lat'))}
+kb.addEventListener('pointerdown',ev=>{
+  const el=ev.target.closest('.k');if(!el||!el.dataset.c)return;
+  ev.preventDefault();
+  const k=el.dataset.c;
+  try{el.setPointerCapture(ev.pointerId)}catch(e){}
+  navigator.vibrate&&navigator.vibrate(6);
+  if(latched.has(k)){latched.delete(k);el.classList.remove('lat');send('u',k);return}  // chạm lần nữa: nhả phím dính
+  down.set(ev.pointerId,{k,el,t:Date.now()});
+  el.classList.add('on');send('d',k);
+});
+function up(ev){
+  const d=down.get(ev.pointerId);if(!d)return;down.delete(ev.pointerId);
+  if(MODS.has(d.k)&&Date.now()-d.t<350){latched.add(d.k);d.el.classList.replace('on','lat');return}  // chạm nhanh = phím dính
+  d.el.classList.remove('on');send('u',d.k);
+  if(!MODS.has(d.k)){for(const m of latched){send('u',m);els[m].classList.remove('lat')}latched.clear()}
+}
+addEventListener('pointerup',up);addEventListener('pointercancel',up);
+addEventListener('contextmenu',e=>e.preventDefault());
+
+const fs=document.getElementById('fs');
+fs.onclick=async()=>{try{await document.documentElement.requestFullscreen();await screen.orientation.lock('landscape')}catch(e){}};
+document.onfullscreenchange=()=>{fs.hidden=!!document.fullscreenElement};
+</script></body></html>

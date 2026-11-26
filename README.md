@@ -30,7 +30,7 @@ Không hỗ trợ macOS và iOS. Không nhắm tới việc chơi game.
 ## Cài đặt
 
 ```bash
-git clone <địa-chỉ-repo-của-bạn> phonekb
+git clone https://github.com/duonggg-10/phonekb phonekb
 cd phonekb
 pip install -r requirements.txt
 python server.py

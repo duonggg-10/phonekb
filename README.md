@@ -1,62 +1,69 @@
 # PhoneKB
 
-Turn your Android phone into a wireless external keyboard for your computer over WiFi. Your phone only needs a browser (Chrome or Firefox)—no app installation required. A small server runs in the background on your computer (Windows or Linux) and types keys for you.
+Biến điện thoại Android thành bàn phím rời không dây cho máy tính qua WiFi. Điện thoại chỉ cần một trình duyệt (Chrome hoặc Firefox), không cần cài ứng dụng. Server nhỏ chạy nền trên máy tính (Windows hoặc Linux) và gõ phím thay cho bạn.
 
 ```
-[Phone: browser] --WebSocket--> [Python Server on PC] --SendInput / uinput--> keys typed into the machine
+[Điện thoại: trình duyệt] --WebSocket--> [Server Python trên PC] --SendInput / uinput--> phím được gõ vào máy
 ```
 
-## Features
+## Tính năng
 
-- Full keyboard, landscape layout: QWERTY, number row, F1–F12, 4 arrow keys, Insert/Delete/Home/End/PgUp/PgDn, Ctrl/Alt/Win/Menu.
-- Sends separate key-down and key-up events, so holding keys, typing shortcuts (Ctrl+C, Alt+Tab, etc.), and multi-touch all work.
-- Sticky keys for Shift/Ctrl/Alt/Win: quick tap to hold, tap again to release.
-- Compatible with Vietnamese IMEs (Unikey, EVKey, iBus-Bamboo, etc.): keys are sent as physical scancodes like a real keyboard, and the IME on your PC handles Telex/VNI as usual.
-- Pair via QR code with a token—no need to type an IP address.
-- Auto-discovery: your Android phone sees the keyboard, and opening `localhost` on the host shows the status page and QR code.
-- Only one phone can control at a time. When disconnected, any held keys are released automatically.
+- Bàn phím đầy đủ, bố cục ngang: QWERTY, hàng số, 4 phím mũi tên, Insert/Delete/Home/End/PgUp/PgDn, Ctrl/Alt/Win/Menu.
+- **Touch bar** phía trên (vuốt trái/phải để đổi trang): F1-F12 và Esc; điều khiển media (tên bài/tab đang phát, bài trước, phát/tạm dừng, bài sau); âm lượng, tắt tiếng, độ sáng, PrtSc.
+- **Bàn di chuột** và hai nút chuột: một ngón di chuyển, chạm để click trái; hai ngón để cuộn, chụm/giãn để zoom (Ctrl + lăn chuột), chạm hai ngón để click phải.
+- Gửi sự kiện nhấn và nhả phím riêng biệt, nên giữ phím, gõ tổ hợp (Ctrl+C, Alt+Tab...) và đa chạm đều hoạt động.
+- Phím dính cho Shift/Ctrl/Alt/Win: chạm nhanh để giữ, chạm lần nữa để nhả.
+- Tương thích bộ gõ tiếng Việt (Unikey, EVKey, iBus-Bamboo...): phím được gửi dưới dạng scancode vật lý như bàn phím thật, bộ gõ trên PC tự xử lý Telex/VNI.
+- Ghép đôi bằng mã QR kèm token, không cần nhập IP.
+- Tự nhận thiết bị: điện thoại Android thấy bàn phím, máy chủ mở `localhost` thấy trang trạng thái và mã QR.
+- Chỉ một điện thoại điều khiển cùng lúc. Khi mất kết nối, mọi phím đang giữ được nhả tự động.
 
-## Requirements
+## Yêu cầu
 
 | | |
 |---|---|
-| Computer (running server) | Windows 10/11, or Linux (Ubuntu, Arch, X11 or Wayland) |
-| Phone | Android, Chrome/Chromium or Firefox |
-| Network | Phone and computer on the same WiFi/LAN network |
-| Software | Python 3.9 or newer |
+| Máy tính (chạy server) | Windows 10/11, hoặc Linux (Ubuntu, Arch, X11 hoặc Wayland) |
+| Điện thoại | Android, Chrome/Chromium hoặc Firefox |
+| Mạng | Điện thoại và máy tính cùng một mạng WiFi/LAN |
+| Phần mềm | Python 3.9 trở lên |
 
-macOS and iOS are not supported. Not aimed at gaming.
+Không hỗ trợ macOS và iOS. Không nhắm tới việc chơi game.
 
-## Installation
+## Cài đặt
 
 ```bash
-git clone https://github.com/duonggg-10/phonekb phonekb
+git clone <địa-chỉ-repo-của-bạn> phonekb
 cd phonekb
 pip install -r requirements.txt
 python server.py
 ```
 
-On your computer, open `http://localhost:3636/` to view the QR code, then scan it with your phone. From the next time onward, your phone's browser remembers the token—just reopen the same address or save it to your home screen.
+Trên máy tính, mở `http://localhost:3636/` để xem mã QR, rồi quét bằng điện thoại. Từ lần sau, trình duyệt điện thoại nhớ token, bạn chỉ cần mở lại cùng địa chỉ hoặc lưu vào màn hình chính.
 
-When opening on your phone, tap **Fullscreen** to rotate to landscape and get more room.
+Khi mở bằng điện thoại, nên bấm **Toàn màn hình** để xoay ngang và có nhiều chỗ hơn.
 
-## Configuration
+## Cấu hình
 
-| Environment variable | Default | Meaning |
+| Biến môi trường | Mặc định | Ý nghĩa |
 |---|---|---|
-| `PHONEKB_PORT` | `3636` | Server port |
+| `PHONEKB_PORT` | `3636` | Cổng server |
 
-The pairing token is randomly generated and stored at `~/.phonekb_token`, so the QR code stays the same across runs. Delete this file to rotate the token.
+Token ghép đôi được sinh ngẫu nhiên và lưu ở `~/.phonekb_token`, nên mã QR không đổi giữa các lần chạy. Xóa file này để đổi token.
+
+## Tên bài đang phát và độ sáng
+
+- Windows: tên bài cần gói `winsdk` (đã có trong `requirements.txt`; nếu cài lỗi với Python mới, thử `pip install winrt-runtime winrt-Windows.Media.Control winrt-Windows.Foundation winrt-Windows.Foundation.Collections`). Nút độ sáng chỉ chỉnh được màn hình tích hợp của laptop.
+- Linux: tên bài cần `playerctl` (`sudo apt install playerctl` hoặc `sudo pacman -S playerctl`). Nút độ sáng và âm lượng do môi trường desktop xử lý.
 
 ## Windows
 
-- On first run, allow Python through Windows Firewall (Private networks).
-- Run in the background without a window: `pythonw server.py`, and place a shortcut in the `shell:startup` folder to start automatically at login.
-- Windows running as Administrator only receive keystrokes if the server is also running as Administrator.
+- Lần đầu chạy, cho phép Python đi qua Windows Firewall (mạng Private).
+- Chạy nền không cửa sổ: `pythonw server.py`, và đặt shortcut vào thư mục `shell:startup` để tự chạy khi đăng nhập.
+- Cửa sổ đang chạy quyền Administrator chỉ nhận phím nếu server cũng chạy bằng quyền Administrator.
 
 ## Linux
 
-The server creates a virtual keyboard via `/dev/uinput` (works on both X11 and Wayland), so a one-time permission setup is needed:
+Server tạo bàn phím ảo qua `/dev/uinput` (chạy được cả X11 và Wayland), nên cần cấp quyền một lần:
 
 ```bash
 echo 'KERNEL=="uinput", GROUP="input", MODE="0660"' | sudo tee /etc/udev/rules.d/99-uinput.rules
@@ -65,7 +72,7 @@ sudo modprobe uinput && echo uinput | sudo tee /etc/modules-load.d/uinput.conf
 sudo udevadm control --reload && sudo udevadm trigger
 ```
 
-Then log out and log back in. To run in the background with systemd, create `~/.config/systemd/user/phonekb.service`:
+Sau đó đăng xuất và đăng nhập lại. Để chạy nền bằng systemd, tạo `~/.config/systemd/user/phonekb.service`:
 
 ```ini
 [Service]
@@ -76,56 +83,56 @@ Restart=on-failure
 WantedBy=default.target
 ```
 
-then run `systemctl --user enable --now phonekb`.
+rồi chạy `systemctl --user enable --now phonekb`.
 
-## Typing Vietnamese
+## Gõ tiếng Việt
 
-PhoneKB does not send Unicode characters; it sends physical key events just like an attached keyboard. Turn on your IME (Unikey, EVKey, iBus-Bamboo, etc.) on your computer as usual and type Telex/VNI from the virtual keyboard. To switch between Vietnamese and English, use your IME's shortcut in combination with the sticky Ctrl/Shift/Alt keys on your phone.
+PhoneKB không gửi ký tự Unicode mà gửi phím vật lý, giống như bàn phím gắn vào máy. Vì vậy hãy bật bộ gõ (Unikey, EVKey, iBus-Bamboo...) trên máy tính như thường lệ và gõ Telex/VNI từ bàn phím ảo. Để đổi Việt/Anh, dùng phím tắt của bộ gõ, kết hợp phím dính Ctrl/Shift/Alt trên điện thoại.
 
-## Security
+## Bảo mật
 
-Anyone with the token can type into your computer, which means nearly full control of the machine.
+Ai có token đều có thể gõ vào máy của bạn, tức là gần như điều khiển được máy.
 
-- The token is only shown on the host's `localhost` page and is not exposed to other devices on the network.
-- The server listens on all network interfaces. Only use it on a trusted WiFi network, and do not expose the port to the internet.
-- The connection uses plain HTTP without encryption. Do not use it on public networks.
-- To revoke access, delete `~/.phonekb_token` and restart the server.
+- Token chỉ hiển thị trên trang `localhost` của máy chủ, không lộ cho thiết bị khác trong mạng.
+- Server nghe trên mọi card mạng. Chỉ dùng trên mạng WiFi tin cậy, và không mở cổng ra Internet.
+- Kết nối dùng HTTP thường, không mã hóa. Đừng dùng trên mạng công cộng.
+- Muốn thu hồi quyền truy cập, xóa `~/.phonekb_token` và khởi động lại server.
 
-## Troubleshooting
+## Xử lý sự cố
 
-| Symptom | How to fix |
+| Triệu chứng | Cách xử lý |
 |---|---|
-| `localhost:3636` shows another program | The port is in use. Change it with `PHONEKB_PORT`, or close the other program. |
-| Phone cannot connect | Check that both are on the same WiFi, the firewall allows the port, and the router does not have "client isolation" enabled (common on hotel/café WiFi). |
-| Linux reports `/dev/uinput` error | Follow the Linux section above, and remember to log out and log back in. |
-| Keys do not go into Admin windows (Windows) | Run the server as Administrator. |
-| Phone screen turns off automatically | The page runs over HTTP, so Wake Lock is unavailable. Increase the screen timeout in Android settings. |
-| Cannot lock landscape orientation | The orientation lock API requires fullscreen and may behave differently between Chrome and Firefox. Turn on auto-rotate and rotate your phone sideways. |
-| `phimtay.local` does not open | The mDNS name is only a fallback. Use the QR code or IP address. |
+| `localhost:3636` ra chương trình khác | Cổng đang bị chiếm. Đổi bằng `PHONEKB_PORT`, hoặc tắt chương trình kia. |
+| Điện thoại không vào được | Kiểm tra cùng WiFi, firewall có mở cổng, và router không bật "client isolation" (WiFi khách sạn/quán cà phê thường bật). |
+| Linux báo lỗi `/dev/uinput` | Làm theo mục Linux ở trên, nhớ đăng xuất/đăng nhập lại. |
+| Phím không vào cửa sổ Admin (Windows) | Chạy server bằng quyền Administrator. |
+| Màn hình điện thoại tự tắt | Trang chạy HTTP nên không dùng được Wake Lock. Tăng thời gian tắt màn hình trong cài đặt Android. |
+| Không khóa được xoay ngang | API khóa xoay cần toàn màn hình và có thể khác nhau giữa Chrome và Firefox. Hãy bật xoay tự động rồi xoay ngang máy. |
+| Tên `phimtay.local` không mở được | Tên mDNS chỉ là phương án phụ. Dùng mã QR hoặc địa chỉ IP. |
 
-## Structure
+## Cấu trúc
 
 ```
 phonekb/
-├── server.py          # HTTP + WebSocket server, sends keystrokes to the OS
-├── keyboard.html      # phone keyboard UI
+├── server.py          # server HTTP + WebSocket, gõ phím vào hệ điều hành
+├── keyboard.html      # giao diện bàn phím trên điện thoại
 ├── requirements.txt
 └── README.md
 ```
 
-## Protocol
+## Giao thức
 
-The phone sends small JSON messages over `ws://<host>:<port>/ws?t=<token>`, using `KeyboardEvent.code` as the key code:
+Điện thoại gửi qua `ws://<máy>:<cổng>/ws?t=<token>` các tin JSON nhỏ, dùng `KeyboardEvent.code` làm mã phím:
 
 ```json
 {"t": "d", "k": "KeyA"}
 {"t": "u", "k": "KeyA"}
 ```
 
-`d` means key down, and `u` means key up. Key codes not in the server's mapping table are ignored.
+`d` là nhấn xuống, `u` là nhả. Mã phím không có trong bảng của server sẽ bị bỏ qua.
 
-## Known Limitations
+## Hạn chế đã biết
 
-- Only supports the QWERTY (US style) layout. The physical keyboard on your PC should be set to the US layout.
-- No numpad, media keys, or PrintScreen/Pause/ScrollLock yet.
-- Does not support games that require low-level key scanning.
+- Chỉ hỗ trợ bố cục phím QWERTY (kiểu Mỹ). Bàn phím vật lý trên PC nên đặt bố cục US.
+- Chưa có phím số bên phải (numpad), Pause/ScrollLock; chưa có kéo-thả bằng cách chạm hai lần trên bàn di chuột (dùng nút Trái để kéo).
+- Chưa hỗ trợ game cần quét phím ở mức thấp.
